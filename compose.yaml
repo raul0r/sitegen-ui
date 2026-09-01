@@ -1,0 +1,25 @@
+name: sitegen-ui
+
+services:
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      SITEGEN_API_BASE_URL: ${SITEGEN_API_BASE_URL:-http://host.docker.internal:8000}
+      SITEGEN_API_TOKEN: ${SITEGEN_API_TOKEN:-}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app
+      - ui_node_modules:/app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: "1001:1001"
+    command: ["sh", "-c", "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"]
+
+volumes:
+  ui_node_modules:

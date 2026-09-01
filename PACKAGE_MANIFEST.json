@@ -1,0 +1,27 @@
+{
+  "package": "SiteGen Operator UI V1 Build Package",
+  "version": "1.0",
+  "files": [
+    "AGENTS.md",
+    "CODEX_KICKOFF.md",
+    "README.md",
+    "START_HERE.md",
+    "TASKS.md",
+    "docs/API_GAP_LOG.md",
+    "docs/API_INTEGRATION.md",
+    "docs/ARCHITECTURE_DECISIONS.md",
+    "docs/AUTH_AND_SECURITY.md",
+    "docs/CLOUDFLARE_DEPLOYMENT.md",
+    "docs/COMPONENT_SYSTEM.md",
+    "docs/DOCKER_AND_LOCAL_DEV.md",
+    "docs/FRONTEND_ARCHITECTURE.md",
+    "docs/FUTURE_HERMES_ALIGNMENT.md",
+    "docs/PRODUCT_SPEC.md",
+    "docs/STATE_MANAGEMENT.md",
+    "docs/TESTING_STRATEGY.md",
+    "docs/UX_COPY.md",
+    "docs/UX_FLOW.md"
+  ],
+  "file_count": 19,
+  "purpose": "Planning and implementation contract for the separate React/Vite SiteGen Operator UI."
+}

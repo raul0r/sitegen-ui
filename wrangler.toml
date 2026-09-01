@@ -1,0 +1,10 @@
+name = "sitegen-ui"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-31"
+
+# Server-side only. Set these with Wrangler; never as VITE_* vars.
+# wrangler pages secret put SITEGEN_API_TOKEN
+# wrangler pages project create / pages secret
+
+[vars]
+SITEGEN_API_BASE_URL = ""

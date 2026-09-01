@@ -1,0 +1,31 @@
+# dependencies
+node_modules
+
+# build
+dist
+dist-ssr
+coverage
+test-results
+playwright-report
+blob-report
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs / OS
+*.log
+.DS_Store
+npm-debug.log*
+.vite
+
+# editors
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# generated caches
+.cache
+.turbo
