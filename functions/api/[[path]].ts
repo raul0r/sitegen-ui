@@ -81,20 +81,28 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
       redirect: "manual",
     });
 
-    const headers = new Headers();
-    upstream.headers.forEach((value, key) => {
-      const lower = key.toLowerCase();
-      if (HOP_BY_HOP.has(lower) || lower === "authorization" || lower === "set-cookie") {
-        return;
-      }
-      headers.set(key, value);
-    });
-    headers.set("Cache-Control", "no-store");
+    const responseHeaders = new Headers();
 
-    return new Response(upstream.body, {
-      status: upstream.status,
-      headers,
-    });
+upstream.headers.forEach((value, key) => {
+  const lower = key.toLowerCase();
+
+  if (
+    HOP_BY_HOP.has(lower) ||
+    lower === "authorization" ||
+    lower === "set-cookie"
+  ) {
+    return;
+  }
+
+  responseHeaders.set(key, value);
+});
+
+responseHeaders.set("Cache-Control", "no-store");
+
+return new Response(upstream.body, {
+  status: upstream.status,
+  headers: responseHeaders,
+});
   } catch {
     return jsonError(
       502,
