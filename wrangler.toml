@@ -7,4 +7,4 @@ compatibility_date = "2026-08-31"
 # wrangler pages project create / pages secret
 
 [vars]
-SITEGEN_API_BASE_URL = ""
+SITEGEN_API_BASE_URL = "https://api-sitegen.gatofeo.net"
