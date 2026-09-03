@@ -1,6 +1,8 @@
 type PagesEnv = {
   SITEGEN_API_BASE_URL?: string;
   SITEGEN_API_TOKEN?: string;
+  CF_ACCESS_CLIENT_ID?: string;
+  CF_ACCESS_CLIENT_SECRET?: string;
 };
 
 type PagesContext = {
@@ -22,7 +24,12 @@ const HOP_BY_HOP = new Set([
   "content-length",
 ]);
 
-function jsonError(status: number, code: string, message: string, retryable: boolean) {
+function jsonError(
+  status: number,
+  code: string,
+  message: string,
+  retryable: boolean,
+) {
   return Response.json(
     { error: { code, message, retryable } },
     {
@@ -32,39 +39,64 @@ function jsonError(status: number, code: string, message: string, retryable: boo
   );
 }
 
-function outgoingHeaders(request: Request, token: string): Headers {
+function outgoingHeaders(
+  request: Request,
+  token: string,
+  accessClientId: string,
+  accessClientSecret: string,
+): Headers {
   const headers = new Headers();
   request.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
-    if (HOP_BY_HOP.has(lower) || lower === "authorization" || lower === "cookie") {
+    if (
+      HOP_BY_HOP.has(lower) ||
+      lower === "authorization" ||
+      lower === "cookie"
+    ) {
       return;
     }
     headers.set(key, value);
   });
   headers.set("Authorization", `Bearer ${token}`);
+  headers.set("CF-Access-Client-Id", accessClientId);
+  headers.set("CF-Access-Client-Secret", accessClientSecret);
   return headers;
 }
 
 export const onRequest = async (context: PagesContext): Promise<Response> => {
-  const baseUrl = (context.env.SITEGEN_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+  const baseUrl = (context.env.SITEGEN_API_BASE_URL ?? "")
+    .trim()
+    .replace(/\/+$/, "");
   const token = (context.env.SITEGEN_API_TOKEN ?? "").trim();
+  const accessClientId = (context.env.CF_ACCESS_CLIENT_ID ?? "").trim();
+  const accessClientSecret = (context.env.CF_ACCESS_CLIENT_SECRET ?? "").trim();
 
-  if (!baseUrl || !token) {
+  if (!baseUrl || !token || !accessClientId || !accessClientSecret) {
     return jsonError(
       503,
       "authentication_not_configured",
-      "The SiteGen API token is not configured on the UI server.",
+      "The SiteGen upstream authentication is not configured on the UI server.",
       false,
     );
   }
 
   const incoming = new URL(context.request.url);
   const upstreamUrl = `${baseUrl}${incoming.pathname}${incoming.search}`;
-  const headers = outgoingHeaders(context.request, token);
+  const headers = outgoingHeaders(
+    context.request,
+    token,
+    accessClientId,
+    accessClientSecret,
+  );
   try {
-    const upstreamHost = new URL(baseUrl.includes("://") ? baseUrl : `http://${baseUrl}`);
+    const upstreamHost = new URL(
+      baseUrl.includes("://") ? baseUrl : `http://${baseUrl}`,
+    );
     if (upstreamHost.hostname === "host.docker.internal") {
-      headers.set("Host", upstreamHost.port ? `127.0.0.1:${upstreamHost.port}` : "127.0.0.1");
+      headers.set(
+        "Host",
+        upstreamHost.port ? `127.0.0.1:${upstreamHost.port}` : "127.0.0.1",
+      );
     }
   } catch {
     /* keep fetch-derived host */
@@ -83,26 +115,26 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
 
     const responseHeaders = new Headers();
 
-upstream.headers.forEach((value, key) => {
-  const lower = key.toLowerCase();
+    upstream.headers.forEach((value, key) => {
+      const lower = key.toLowerCase();
 
-  if (
-    HOP_BY_HOP.has(lower) ||
-    lower === "authorization" ||
-    lower === "set-cookie"
-  ) {
-    return;
-  }
+      if (
+        HOP_BY_HOP.has(lower) ||
+        lower === "authorization" ||
+        lower === "set-cookie"
+      ) {
+        return;
+      }
 
-  responseHeaders.set(key, value);
-});
+      responseHeaders.set(key, value);
+    });
 
-responseHeaders.set("Cache-Control", "no-store");
+    responseHeaders.set("Cache-Control", "no-store");
 
-return new Response(upstream.body, {
-  status: upstream.status,
-  headers: responseHeaders,
-});
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers: responseHeaders,
+    });
   } catch {
     return jsonError(
       502,
